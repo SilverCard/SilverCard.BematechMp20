@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Ports;
 
@@ -83,13 +84,13 @@ namespace SilverCard.BematechMp20
         /// Envia o buffer para uma port COM.
         /// </summary>
         /// <param name="nomePorta">Nome da porta COM.</param>
+        [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         public void EnviarBuffer(String nomePorta)
         {
             using (var serialPort = new SerialPort(nomePorta, 9600))
             {
                 serialPort.Open();
-                var bytes = _MemoryStream.ToArray();
-                serialPort.Write(bytes, 0, bytes.Length);
+                _MemoryStream.CopyTo(serialPort.BaseStream);
                 serialPort.Close();
             }
         }
@@ -109,6 +110,7 @@ namespace SilverCard.BematechMp20
         public void EsvaziarBuffer()
         {
             _MemoryStream.SetLength(0);
+            _MemoryStream.Position = 0;
         }
 
         /// <summary>
