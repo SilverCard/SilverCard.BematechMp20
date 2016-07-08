@@ -1,26 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Ports;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SilverCard.BematechMp20
 {
     public class BematechMp20 : IDisposable
     {
-        MemoryStream memoryStream;
+        private MemoryStream _MemoryStream;
 
         public const Byte EscByte = 0x1b;
         public const int ColunasModoNormal = 48;
         public const int ColunasModoElite = 40;
-        public const int ColunasModoComprimido = 60;
-        
+        public const int ColunasModoComprimido = 60;        
 
         public BematechMp20()
         {
-            memoryStream = new MemoryStream();
+            _MemoryStream = new MemoryStream();
         }
 
         /// <summary>
@@ -76,49 +71,70 @@ namespace SilverCard.BematechMp20
 
         public void EscreverByte(Byte b)
         {            
-            memoryStream.WriteByte(b);
+            _MemoryStream.WriteByte(b);
         }
 
         public void EscreverBytes(Byte[] b)
         {
-            memoryStream.Write(b, 0, b.Length);
+            _MemoryStream.Write(b, 0, b.Length);
         }
 
+        /// <summary>
+        /// Envia o buffer para uma port COM.
+        /// </summary>
+        /// <param name="nomePorta">Nome da porta COM.</param>
         public void EnviarBuffer(String nomePorta)
         {
             using (var serialPort = new SerialPort(nomePorta, 9600))
             {
                 serialPort.Open();
-                var bytes = memoryStream.ToArray();
+                var bytes = _MemoryStream.ToArray();
                 serialPort.Write(bytes, 0, bytes.Length);
                 serialPort.Close();
             }
         }
 
+        /// <summary>
+        /// Converte o buffer interno para bytes.
+        /// </summary>
+        /// <returns></returns>
         public byte[] ParaBytes()
         {
-            return memoryStream.ToArray();
+            return _MemoryStream.ToArray();
         }
 
+        /// <summary>
+        /// Esvazia o buffer interno.
+        /// </summary>
         public void EsvaziarBuffer()
         {
-            memoryStream.SetLength(0);
+            _MemoryStream.SetLength(0);
         }
 
+        /// <summary>
+        /// Escreve uma linha no buffer.
+        /// </summary>
+        /// <param name="str"></param>
         public void EscreverLinha(String str)
         {
             if (str == null) return;
-
             EscreverBytes(CodificadorAbicomp.Codificar(str));
             AvancarLinha();
         }
 
+        /// <summary>
+        /// Escreve uma nova linha no buffer.
+        /// </summary>
         public void AvancarLinha()
         {
             EscreverByte(0x0D);
             EscreverByte(0x0A);
         }
         
+        /// <summary>
+        /// Avança várias linhas no buffer.
+        /// </summary>
+        /// <param name="n">Número de linhas.</param>
         public void AvancarLinhas(int n)
         {
             for (int i = 0; i < n; i++)
@@ -217,9 +233,9 @@ namespace SilverCard.BematechMp20
             {
                 if (disposing)
                 {
-                    if(memoryStream != null)
+                    if(_MemoryStream != null)
                     {
-                        memoryStream.Dispose();
+                        _MemoryStream.Dispose();
                     }
                 }
 
